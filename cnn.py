@@ -155,7 +155,7 @@ def main(lr, batch_size, SEED, max_epochs, device):
             print("\nValidation start")
             net.eval() #検証モード(Validation)
             val_loss = 0.0
-            accuracy = 0.0
+            val_acc = 0.0
 
             with torch.no_grad():
                 for data,target in data_loder["validation"]:
@@ -167,14 +167,18 @@ def main(lr, batch_size, SEED, max_epochs, device):
                     #loss = F.nll_loss(output,target).item()
                     val_loss += F.nll_loss(output,target,reduction='sum').item()
                     predict = output.argmax(dim=1,keepdim=True)
-                    accuracy += predict.eq(target.view_as(predict)).sum().item()
+                    val_acc += predict.eq(target.view_as(predict)).sum().item()
 
-            val_loss /= len(data_loder["validation"].dataset)
-            accuracy /= len(data_loder["validation"].dataset)
+            val_loss /= len(data_loder["validation"].dataset)   # 平均
+            val_acc /= len(data_loder["validation"].dataset)    # 平均
 
-            print("Validation loss: {}, Accuracy: {}\n".format(val_loss,accuracy))
+            print("Validation loss: {}, Validation Accuracy: {}\n".format(val_loss,val_acc))
             history["validation_loss"].append(val_loss)
-            history["validation_acc"].append(accuracy)
+            history["validation_acc"].append(val_acc)
+
+            train_loss = history["train_loss"]
+            val_loss = history["validation_acc"]
+            val_acc = history["validation_acc"]
 
 
 if __name__ == '__main__':
@@ -187,3 +191,13 @@ if __name__ == '__main__':
     device = args.device
 
     main(lr, batch_size, SEED, max_epochs, device)
+
+    plt.plot(range(1, max_epochs+1), train_loss, label='train_loss', c="#1f77b4")
+    plt.plot(range(1, max_epochs+1), val_loss, marker="o", lw=0, label='val_loss', c="#1f77b4")
+    plt.plot(range(1, max_epochs+1), val_acc, label='val_acc', c="#ff7f0e")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy & Loss")
+
+    plt.legend()
+    plt.show()
